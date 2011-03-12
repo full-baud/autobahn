@@ -1,6 +1,23 @@
-var http = require('http');
-http.createServer(function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Hello World\n');
-}).listen(8124, "127.0.0.1");
-console.log('Server running at http://127.0.0.1:8124/');
+var sys = require('sys'),
+     ws = require('ws')
+
+var server = ws.createServer(function (socket) {
+
+  socket.addListener("connect", function (resource) {
+    sys.puts("client connected from " + resource)
+    
+    socket.write("welcome\r\n")
+  })
+
+  socket.addListener("data", function (data) {
+    socket.write(data)
+  })
+
+  socket.addListener("close", function () {
+    sys.puts("client left")
+  })
+  
+ 
+})
+
+server.listen(8080)
