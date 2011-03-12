@@ -7,13 +7,23 @@ Player = function() {
 		name: "",
 		
 		// eg. MD5'd email for gravatar
-		avatar: ""
+		avatar: "",
+		
+		// this player's socket connection
+		socket: null,
+		
+		invoke: function(methodName, args) {
+			this.socket.write(JSON.stringify({
+				action: methodName,
+				args: args ? args : []
+			})+ "\r\n");
+		}
 	}
 };
 
 Game = function() {
 	return {
-		numPlayers: 4,
+		numPlayers: 1,
 		title: "Lounge",
 		players: [
 		
@@ -83,8 +93,24 @@ var autoBahn = {
 		
 		if(game.players.length == game.numPlayers) {
 			// game on
+			for(var i = 0; i < game.players.length; i++) {
+				game.players[i].invoke("startGame", [gameId]);
+			}
 			
+			autoBahn._startGame(game);
 		}
+	},
+	
+	_startGame: function(game) {
+		
+	},
+	
+	receiveKeyUp: function(userId, gameId, keyCode) {
+		sys.puts("recieved " + userId + " " + gameId + " " + keyCode);
+	},
+	
+	receiveKeyDown: function(userId, gameId, keyCode) {
+		sys.puts("recieved " + userId + " " + gameId + " " + keyCode);
 	}
 };
 
@@ -102,15 +128,11 @@ var server = ws.createServer(function(socket) {
 		var player = new Player();
 		player.name = "Bob";
 		player.avatar = "asfoj0f9jojs";
+		player.socket = socket;
 		
 		autoBahn.players[id] = player;
 		
-		socket.write(JSON.stringify({
-			action: "setUserId",
-			args: [
-				id
-			]
-		})+ "\r\n");
+		player.invoke("setUserId", [id]);
 	});
 	
 	// answers method calls from the client
