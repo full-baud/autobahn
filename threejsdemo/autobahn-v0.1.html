@@ -31,12 +31,20 @@
 	    
 	    	scene = new THREE.Scene();
 	
-	        camera = new THREE.Camera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+	        camera = new THREE.Camera( 75, window.innerWidth / window.innerHeight, 1, 10000, new THREE.Vector3(10000, 100, 100) );
 	        camera.position.z = 1000;
 	        
+	        
 	        $(document).mousemove(function(event){
+/*
 	        	camera.position.y = event.pageY;
-				camera.position.x = event.pageX;
+						camera.position.x = event.pageX;
+*/
+
+
+						camera.useTarget = true;
+						camera.target.position.x = event.pageX;
+						camera.target.position.y = event.pageY;
 	        });
 	        
 	        
