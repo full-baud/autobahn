@@ -1,6 +1,6 @@
 var socket;
 
-config = {
+var config = {
 	//server: "ws://localhost:8000/socket/server/lounge"
 	server: "ws://localhost:8080"
 };
@@ -51,7 +51,7 @@ client = {
 		
 		var code = event.keyIdentifier + " " + event.type;
 		
-		console.log(code);
+		//console.log(code);
 		
 		if(client._lastKeyPressSent == code) {
 			// don't send repeat codes
@@ -79,7 +79,23 @@ client = {
 		//		}
 		//	}
 		
-		
+		for(var i = 0; i < positions.length; i++) {
+			var position = positions[i];
+			var div = document.getElementById(position.player);
+			
+			if(!div) {
+				div = document.createElement("div");
+				div.id = position.player;
+				document.body.appendChild(div);
+				div.style.position = "absolute";
+				div.style.backgroundColor = position.player == "player0" ? "red" : "blue";
+				div.style.width = "50px";
+				div.style.height = "50px";
+			}
+			
+			div.style.top = position.position.x + "px";
+			div.style.left = position.position.y + "px";
+		}
 	}
 };
 
@@ -94,9 +110,8 @@ dojo.addOnLoad(function() {
 		socket.invoke("getLoungeList");
 	}
 	socket.onmessage = function(message) {
-		console.log("connected " + message);
-		
-		console.dir(message);
+		//console.log("connected " + message);
+		//console.dir(message);
 		
 		if(!message.data) {
 			return;
@@ -109,7 +124,7 @@ dojo.addOnLoad(function() {
 				client[methodCall.action].apply(this, methodCall.args ? methodCall.args : []);
 			}
 		} catch(e) {
-			sys.puts(":( " + e);
+			console.error(e);
 		}
 		
 		

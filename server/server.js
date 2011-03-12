@@ -1,8 +1,13 @@
 var sys = require('sys'),
      ws = require('ws')
 
+// vary this to change the speed of the app...
+var runLoopInterval = 20;
+
 Player = function() {
 	return {
+		id: "",
+		
 		// user entered
 		name: "",
 		
@@ -11,6 +16,25 @@ Player = function() {
 		
 		// this player's socket connection
 		socket: null,
+		
+		buttons: {
+			up: false,
+			down: false,
+			left: false,
+			right: false
+		},
+		
+		position: {
+			x: 0,
+			y: 0,
+			z: 0
+		},
+		
+		velocity: {
+			angle: 0,
+			elevation: 0,
+			speed: 0
+		},
 		
 		invoke: function(methodName, args) {
 			this.socket.write(JSON.stringify({
@@ -23,7 +47,7 @@ Player = function() {
 
 Game = function() {
 	return {
-		numPlayers: 1,
+		numPlayers: 2,
 		title: "Lounge",
 		players: [
 		
@@ -97,19 +121,92 @@ var autoBahn = {
 				game.players[i].invoke("startGame", [gameId]);
 			}
 			
-			autoBahn._startGame(game);
+			autoBahn._startGame(gameId, game);
 		}
 	},
 	
-	_startGame: function(game) {
-		
+	_startGame: function(gameId, game) {
+		game.interval = setInterval(function() {
+			var positions = [];
+			var foo = 10;
+			
+			// update player positions
+			for(var i = 0; i < game.players.length; i++) {
+				var player = game.players[i];
+				
+				if(player.buttons.up) {
+					player.position.x -= foo;
+				}
+				
+				if(player.buttons.down) {
+					player.position.x += foo;
+				}
+				
+				if(player.buttons.right) {
+					player.position.y += foo;
+				}
+				
+				if(player.buttons.left) {
+					player.position.y -= foo;
+				}
+				
+				// this will be sent to the client
+				positions.push({
+					id: player.id,
+					player: "player" + i,
+					position: player.position,
+					velocity: player.velocity
+				});
+			}
+			
+			// inform all players of new positions
+			for(var i = 0; i < game.players.length; i++) {
+				game.players[i].invoke("updateGame", [gameId, positions]);
+			}
+		}, runLoopInterval);
 	},
 	
 	receiveKeyUp: function(userId, gameId, keyCode) {
-		sys.puts("recieved " + userId + " " + gameId + " " + keyCode);
+		var player = autoBahn.players[userId];
+		
+		if(!player) {
+			sys.puts("Could not find player with id " + userId);
+			
+			return;
+		}
+		
+		if(keyCode == "Up") {
+			player.buttons.up = false;
+		} else if(keyCode == "Down") {
+			player.buttons.down = false;
+		} else if(keyCode == "Right") {
+			player.buttons.right = false;
+		} else if(keyCode == "Left") {
+			player.buttons.left = false;
+		}
+		
+		//sys.puts("recieved " + userId + " " + gameId + " " + keyCode);
 	},
 	
 	receiveKeyDown: function(userId, gameId, keyCode) {
+		var player = autoBahn.players[userId];
+		
+		if(!player) {
+			sys.puts("Could not find player with id " + userId);
+			
+			return;
+		}
+		
+		if(keyCode == "Up") {
+			player.buttons.up = true;
+		} else if(keyCode == "Down") {
+			player.buttons.down = true;
+		} else if(keyCode == "Right") {
+			player.buttons.right = true;
+		} else if(keyCode == "Left") {
+			player.buttons.left = true;
+		}
+		
 		sys.puts("recieved " + userId + " " + gameId + " " + keyCode);
 	}
 };
@@ -126,6 +223,7 @@ var server = ws.createServer(function(socket) {
 		
 		// new user, create their player
 		var player = new Player();
+		player.id = id;
 		player.name = "Bob";
 		player.avatar = "asfoj0f9jojs";
 		player.socket = socket;
