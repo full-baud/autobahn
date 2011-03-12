@@ -18,8 +18,8 @@ var server = ws.createServer(function (socket) {
   })
   
   var moveIt = function() {
-  	var direction = Math.ceil(Math.random());
-  	var amount = Math.random() * 10;
+  	var direction = Math.round(Math.random());
+  	var amount = (Math.random() * 200)-100;
   	
   	var stuff = {
   		axis: direction,
@@ -30,7 +30,10 @@ var server = ws.createServer(function (socket) {
   	
   	socket.write(JSON.stringify(stuff)+ "\r\n");
   	var movementTime = Math.random() * 1000;
-    setTimeout(moveIt, movementTime);
+  	
+  	setTimeout(moveIt, 1);
+
+    //setTimeout(moveIt, movementTime);
   }
  
 })
