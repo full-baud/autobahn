@@ -11,12 +11,33 @@
 	</head>
 	<body>
 		
-
 		<div id="container">		
 			<h1>AutoBahn</h1>
-			<form>
-				<input id="join" type="submit" value="join game" disabled="true" />
-			</form>
+			<div id="loungeList">
+				<form>
+					<h2>Create new game</h2>
+					<input placeholder="Title" id="createNewGameTitle" />
+					<select id="createNewGamePlayers">
+						<option>1</option>
+						<option>2</option>
+						<option>4</option>
+						<option>8</option>
+						<option>16</option>
+					</select>
+					<input type="submit" id="createNewGameButton" value="Create" />
+				</form>
+				<table>
+					<thead>
+						<th>
+							<td>Game name</td>
+							<td>Players</td>
+							<td>&nbsp;</td>
+						</th>
+					</thead>
+					<tbody id="loungeTableList">
+					</tbody>
+				</table>
+			</div>
 		</div> 
 		
 		<script type="text/javascript"> 
@@ -61,85 +82,8 @@
 					buffer2[i] = 0;
 					turbulence[i] = Math.random();
 				}
- 
-				document.addEventListener('mousedown', onDocumentMouseDown, false);
-				document.addEventListener('mousemove', onDocumentMouseMove, false);
-				document.addEventListener('mouseup', onDocumentMouseUp, false);
-				document.addEventListener('mouseout', onDocumentMouseOut, false);
- 
-				document.addEventListener('touchstart', onDocumentTouchStart, false);
-				document.addEventListener('touchmove', onDocumentTouchMove, false);
-				document.addEventListener('touchend', onDocumentTouchEnd, false);
 			}
- 
-			//
- 
-			function onDocumentMouseDown(event) {
- 
-				event.preventDefault();
- 
-				isUserInteracting = true;
- 
-				pointers = [[event.clientX / QUALITY, event.clientY / QUALITY]];
- 
-			}
- 
-			function onDocumentMouseMove(event) {
- 
-				pointers = [[event.clientX / QUALITY, event.clientY / QUALITY]];
- 
-			}
- 
-			function onDocumentMouseUp(event) {
- 
-				isUserInteracting = false;
- 
-			}
- 
-			function onDocumentMouseOut(event) {
- 
-				isUserInteracting = false;
- 
-			}
- 
-			function onDocumentTouchStart(event) {
- 
-				isUserInteracting = true;
- 
-				event.preventDefault();
- 
-				pointers = [];
- 
-				for (var i = 0; i < event.touches.length; i++) {
- 
-					pointers.push([event.touches[i].pageX / QUALITY, event.touches[i].pageY / QUALITY]);
- 
-				}
- 
-			}
- 
-			function onDocumentTouchMove(event) {
- 
-				event.preventDefault();
- 
-				pointers = [];
- 
-				for (var i = 0; i < event.touches.length; i++) {
- 
-					pointers.push([event.touches[i].pageX / QUALITY, event.touches[i].pageY / QUALITY]);
- 
-				}
- 
-			}
- 
-			function onDocumentTouchEnd(event) {
- 
-				event.preventDefault();
- 
-				isUserInteracting = false;
- 
-			}
- 
+ 			 
 			//
  
 			function emit(x, y) {

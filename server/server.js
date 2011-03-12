@@ -49,18 +49,11 @@ Game = function() {
 	return {
 		numPlayers: 2,
 		title: "Lounge",
-		players: [
-		
-		]
+		players: []
 	}
 };
 
 var autoBahn = {
-	// a lounge is a game that hasn't started yet
-	lounges: {
-		
-	},
-	
 	// games are in progress
 	games: {
 		
@@ -70,31 +63,8 @@ var autoBahn = {
 		
 	},
 	
-	getLoungeList: function() {
+	getLoungeList: function(userId) {
 		sys.puts("asked for lounge list");
-		
-		var lounges = [];
-		
-		for(key in autoBahn.lounges) {
-			lounges.push({
-				id: key,
-				lounge: autoBahn.lounges[key]
-			});
-		}
-		
-		return lounges;
-	},
-	
-	joinGame: function(userId, gameId) {
-		sys.puts("user " + userId + " trying to join game " + gameId);
-		
-		var game = autoBahn.lounges[gameId];
-		
-		if(!game) {
-			sys.puts("Could not find game with id " + gameId);
-			
-			return;
-		}
 		
 		var player = autoBahn.players[userId];
 		
@@ -104,6 +74,64 @@ var autoBahn = {
 			return;
 		}
 		
+		var lounges = [];
+		
+		for(key in autoBahn.games) {
+			if(autoBahn.games[key].players == autoBahn.games[key].numPlayers) {
+				continue;
+			}
+			
+			lounges.push({
+				id: key,
+				lounge: autoBahn.games[key]
+			});
+		}
+		
+		player.invoke("gotLoungeList", [lounges]);
+	},
+	
+	createGame: function(userId, gameTitle, numPlayers) {
+		var player = autoBahn.players[userId];
+		
+		if(!player) {
+			sys.puts("Could not find player with id " + userId);
+			
+			return;
+		}
+		
+		var id = "g" + Math.round(Math.random() * 1000000);
+		
+		var game = new Game();
+		game.numPlayers = parseInt(numPlayers);
+		game.title = gameTitle;
+		
+		autoBahn.games[id] = game;
+		
+		autoBahn.joinGame(userId, id);
+	},
+	
+	joinGame: function(userId, gameId) {
+		sys.puts("user " + userId + " trying to join game " + gameId);
+		
+		// get passed game
+		var game = autoBahn.games[gameId];
+		
+		if(!game) {
+			sys.puts("Could not find game with id " + gameId);
+			
+			return;
+		}
+		
+		// get passed player
+		var player = autoBahn.players[userId];
+		
+		if(!player) {
+			sys.puts("Could not find player with id " + userId);
+			
+			return;
+		}
+		
+		// make sure it's not full already
 		if(game.players.length == game.numPlayers) {
 			sys.puts("already " + game.players.length + " connected...");
 			sys.puts("players: " + game.players);
@@ -111,10 +139,12 @@ var autoBahn = {
 			return;
 		}
 		
+		// add player
 		game.players.push(player);
 		
 		sys.puts("now have " + game.players.length + " of " + game.numPlayers + " for game " + gameId);
 		
+		// do we start the game?
 		if(game.players.length == game.numPlayers) {
 			// game on
 			for(var i = 0; i < game.players.length; i++) {
@@ -122,6 +152,9 @@ var autoBahn = {
 			}
 			
 			autoBahn._startGame(gameId, game);
+		} else {
+			// no, bounce to chatroom...
+			player.invoke("joinedGame", [gameId]);
 		}
 	},
 	
@@ -184,8 +217,6 @@ var autoBahn = {
 		} else if(keyCode == "Left") {
 			player.buttons.left = false;
 		}
-		
-		//sys.puts("recieved " + userId + " " + gameId + " " + keyCode);
 	},
 	
 	receiveKeyDown: function(userId, gameId, keyCode) {
@@ -211,15 +242,11 @@ var autoBahn = {
 	}
 };
 
-// hard code one lounge
-autoBahn.lounges["foo"] = new Game();
-
-
 var server = ws.createServer(function(socket) {
 	socket.addListener("connect", function(resource) {
 		sys.puts("client connected from " + resource);
 		
-		var id = Math.round(Math.random() * 1000000);
+		var id = "u" + Math.round(Math.random() * 1000000);
 		
 		// new user, create their player
 		var player = new Player();
@@ -256,28 +283,13 @@ var server = ws.createServer(function(socket) {
 			}
 		} catch(e) {
 			sys.puts(":( " + e);
+			for(key in e) {
+				sys.puts(e[key]);
+			}
 		}
 	});
 	
 	socket.addListener("close", function () {
 		sys.puts("client left");
 	});
-	
-	
-  var moveIt = function() {
-  	var direction = Math.ceil(Math.random());
-  	var amount = Math.random() * 10;
-  	
-  	var stuff = {
-  		axis: direction,
-  		distance: amount
-  	};
-  	
-  	sys.puts("Sending to client " + JSON.stringify(stuff));
-  	
-  	socket.write(JSON.stringify(stuff)+ "\r\n");
-  	var movementTime = Math.random() * 1000;
-    setTimeout(moveIt, movementTime);
-  }
- 
 }).listen(8080);

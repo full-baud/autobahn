@@ -1,8 +1,10 @@
+dojo.require("dojox.grid.DataGrid");
+
 var socket;
 
 var config = {
 	//server: "ws://localhost:8000/socket/server/lounge"
-	server: "ws://localhost:8080"
+	server: "ws://192.168.0.19:8080"
 };
 
 client = {
@@ -15,18 +17,65 @@ client = {
 		
 		console.log("got id " + id);
 		
-		// set up join button
-		var button = document.getElementById("join");
-		button.disabled = false;
-		button.onclick = function() {
-			socket.invoke("joinGame", [id, "foo"]);
+		// we've connected to the server, display the list of available games
+		socket.invoke("getLoungeList", [id]);
+		
+		// set up the new game button
+		document.getElementById("createNewGameButton").onclick = function() {
+			var gameName = document.getElementById("createNewGameTitle").value;
+			var numPlayers = document.getElementById("createNewGamePlayers").value;
+			
+			if(!gameName) {
+				document.getElementById("createNewGameTitle").style.borderColor = "red";
+				
+				return false;
+			}
+			
+			socket.invoke("createGame", [id, gameName, numPlayers]);
 			
 			return false;
 		};
 	},
 	
+	gotLoungeList: function(loungeList) {
+		console.dir(loungeList);
+		
+		var tbody = document.getElementById("loungeTableList");
+		
+		for(var i = 0; i < loungeList.length; i++) {
+			var lounge = loungeList[i];
+			
+			var row = document.createElement("tr");
+			var title = document.createElement("td");
+			title.appendChild(document.createTextNode(lounge.lounge.title));
+			row.appendChild(title);
+			
+			var players = document.createElement("td");
+			players.appendChild(document.createTextNode(lounge.lounge.players.length + "/" + lounge.lounge.numPlayers));
+			row.appendChild(players);
+			
+			var button = document.createElement("input");
+			button.type = "submit";
+			button.value = "Join";
+			button.onclick = function() {
+				socket.invoke("joinGame", [client.id, lounge.id]);
+				
+				return false;
+			};
+			
+			var joinButton = document.createElement("td");
+			joinButton.appendChild(button);
+			row.appendChild(joinButton);
+			
+			tbody.appendChild(row);
+		}
+		
+	},
+	
 	startGame: function(id) {
 		console.log("should start game " + id);
+		
+		document.getElementById("loungeList").style.display = "none";
 		
 		client.game = id;
 		
@@ -63,6 +112,10 @@ client = {
 		client._lastKeyPressSent = code;
 	},
 	
+	joinedGame: function(gameId) {
+		document.getElementById("loungeList").style.display = "none";
+	},
+	
 	updateGame: function(id, positions) {
 		// positions is an array of objects that look like this:
 		// {
@@ -88,9 +141,10 @@ client = {
 				div.id = position.player;
 				document.body.appendChild(div);
 				div.style.position = "absolute";
-				div.style.backgroundColor = position.player == "player0" ? "red" : "blue";
-				div.style.width = "50px";
-				div.style.height = "50px";
+				div.style.backgroundColor = position.player == "player0" ? "green" : "blue";
+				div.style.backgroundImage = position.player == "player0" ? "url('https://secure.gravatar.com/avatar/9d1124bf8f7fe1b93a92a7927accd9a9')" : "url('https://secure.gravatar.com/avatar/a3b09ba64ff875d8718e610dc729581b')";				
+				div.style.width = "80px";
+				div.style.height = "80px";
 			}
 			
 			div.style.top = position.position.x + "px";
@@ -105,9 +159,6 @@ dojo.addOnLoad(function() {
 	socket = new WebSocket(config.server);
 	socket.onopen = function(message) {
 		console.log("open");
-		
-		// we've connected to the server
-		socket.invoke("getLoungeList");
 	}
 	socket.onmessage = function(message) {
 		//console.log("connected " + message);
