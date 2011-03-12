@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang=en>
+<head>
+	<meta charset=utf-8>
+	<title>autobahn v0.1</title>
+	<script src="res/js/three/r32/Three.js"></script>
+	<script src="res/js/three/r32/ThreeExtras.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js" ></script>
+	
+	<style type="text/css">
+		body {background-color: goldenrod;}
+	</style>
+</head>
+<body>
+
+</body>
+	<script type="text/javascript">
+	
+	    var camera, scene, renderer;
+	
+	    init();
+	    setInterval( loop, 1000 / 60 );
+	
+	    function init() {
+	
+	        camera = new THREE.Camera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+	        camera.position.z = 1000;
+	        
+	        $(document).mousemove(function(event){
+	        	camera.position.y = event.pageY;
+				camera.position.x = event.pageX;
+	        });
+	        
+	        
+			var materials = [];
+
+			for ( var i = 0; i < 6; i ++ ) {
+				materials.push( [ new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff } ) ] );
+			}
+
+			cube = new THREE.Mesh( new Cube( 200, 200, 200, 1, 1, materials ), new THREE.MeshFaceMaterial() );
+			cube.position.y = 150;
+			cube.overdraw = true;
+        
+			
+		    $(document).keydown(function(event) {
+		    	var dist = 10;
+		    	
+		    	var repeat = function() {
+		    		if (event.which === 37 ) {
+			    		// left
+			    		cube.position.x -= dist;
+					}
+			    	if (event.which === 38 ) {
+			    		// up
+			    		cube.position.y += dist;
+			    	}
+			    	if (event.which === 39 ) {
+			    		// right
+			    		cube.position.x += dist;
+			    	}
+			    	if (event.which === 40 ) {
+			    		// down
+			    		cube.position.y -= dist;
+			    	}
+		    	}
+		    	
+		    	var id = setInterval(repeat, 10)
+		    	
+		    	$(document).keyup(function(){
+		    		clearInterval(id);
+		    	});
+		    	
+		    	
+		    	
+		    	
+	
+		    });
+		    
+					    
+	        function left(thing, dist) {
+	        	
+	        }
+	        
+	
+	        scene = new THREE.Scene();
+
+			scene.addObject( cube );	
+	
+	        for (var i = 0; i < 1000; i++) {
+	
+	            var particle = new THREE.Particle( new THREE.ParticleCircleMaterial( { color: Math.random() * 0x808080 + 0x808080 } ) );
+	            particle.position.x = Math.random() * 2000 - 1000;
+	            particle.position.y = Math.random() * 2000 - 1000;
+	            particle.position.z = Math.random() * 2000 - 1000;
+	            particle.scale.x = particle.scale.y = Math.random() * 10 + 5;
+	            scene.addObject( particle );
+	        }
+
+	        
+/*
+	        plane = new THREE.Mesh( new Plane( 200, 200 ), new THREE.MeshBasicMaterial( { color: 0xaaaaaa } ) );
+			plane.rotation.x = -90 * ( Math.PI / 180 );
+			plane.overdraw = true;
+			scene.addObject( plane );
+*/
+	
+	        renderer = new THREE.CanvasRenderer();
+	        renderer.setSize( window.innerWidth - 50, window.innerHeight - 50 );
+	
+	        document.body.appendChild( renderer.domElement );
+	
+	    }
+	
+	    function loop() {
+	
+	        renderer.render( scene, camera );
+	
+	    }
+	
+	</script>
+</html>
