@@ -1,0 +1,18 @@
+/* ---- lounge.css ----------------------------------------------------------- */
+
+body {
+	background-color: black;
+	margin:0
+	padding:0;
+	text-align: center;
+}
+
+h1 { 
+/* 	font-family: 'UnifrakturMaguntia', serif;  */
+	font-family: 'Vollkorn', serif;
+	font-size: 5em;
+	top: 80%;
+	position: absolute;
+	color:black;
+	text-shadow: 3px 3px;
+}
