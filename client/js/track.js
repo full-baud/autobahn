@@ -90,6 +90,9 @@ $(document).ready(function() {
 				
 				camera.position.x = playerCubes[self.getId()].position.x;
 				camera.position.y = playerCubes[self.getId()].position.y;
+				
+				camera.target.position.x = playerCubes[self.getId()].position.x;
+				camera.target.position.y = playerCubes[self.getId()].position.y;
 			}
 		    	
 		  var id = setInterval(repeat, 10)
