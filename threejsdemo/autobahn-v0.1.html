@@ -43,15 +43,21 @@
 			var materials = [];
 
 			for ( var i = 0; i < 6; i ++ ) {
-				materials.push( [ new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff } ) ] );
+				materials.push( [ new THREE.MeshBasicMaterial( {map: ImageUtils.loadTexture( 'https://secure.gravatar.com/avatar/9d1124bf8f7fe1b93a92a7927accd9a9' )} ) ] );
 			}
 
-			cube = new THREE.Mesh( new Cube( 200, 200, 200, 1, 1, materials ), new THREE.MeshFaceMaterial() );
+			var cube = new THREE.Mesh( new Cube( 200, 200, 200, 1, 1, materials ), new THREE.MeshFaceMaterial() );
 			cube.position.y = 150;
 			cube.overdraw = true;
 			scene.addObject( cube );
 			
-			player2 = new THREE.Mesh( new Cube( 200, 200, 200, 1, 1, materials ), new THREE.MeshFaceMaterial() );
+			materials = [];
+			
+			for ( var i = 0; i < 6; i ++ ) {
+				materials.push( [ new THREE.MeshBasicMaterial( {map: ImageUtils.loadTexture( 'https://secure.gravatar.com/avatar/a3b09ba64ff875d8718e610dc729581b' )} ) ] );
+			}
+			
+			var player2 = new THREE.Mesh( new Cube( 200, 200, 200, 1, 1, materials ), new THREE.MeshFaceMaterial() );
 			player2.position.y = 300;
 			player2.overdraw = true;
 			scene.addObject( player2 );
