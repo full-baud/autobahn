@@ -131,7 +131,7 @@
              	    
              	    var data = JSON.parse(event.data);
              	    
-             	    if(data && data.axis && data.distance) {
+             	    if(data && (data.axis === 0 || data.axis === 1) && data.distance) {
                	    
                	    if(data.axis == axis.x) {
                	    
@@ -159,7 +159,7 @@
         	    });
         	    
         	    ws.addEventListener('close', function(event) {
-             	    alert('Socket closed');
+             	    console.log('Socket closed');
              	    console.log(event);
         	    });
 	
