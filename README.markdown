@@ -50,10 +50,10 @@ Screen Shots
 Teh awesomenesses.
 
 ### The Lounge
-<img src="https://github.com/full-baud/autobahn/blob/master/docs/img/autobahn-1-lounge.jpg" />
+<img src="https://github.com/full-baud/autobahn/raw/master/docs/img/autobahn-1-lounge.jpg" />
 
 ## The Track
-<img src="https://github.com/full-baud/autobahn/blob/master/docs/img/autobahn-2-track.jpg" />
+<img src="https://github.com/full-baud/autobahn/raw/master/docs/img/autobahn-2-track.jpg" />
 
 ### Autobahn in space
 <img src="https://github.com/full-baud/autobahn/raw/master/docs/img/autobahn-0-space.jpg" />
