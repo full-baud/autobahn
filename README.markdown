@@ -3,14 +3,13 @@ Autobahn README
 
 Autobahn is [sweded][] micromachines
 
-
-Requirments
+Requirements
 -----------
 
-* Install node.js 
-* Get npm  wget http://npmjs.org/install.sh
-* chmod +x install.sh
-* sudo ./install.sh
+Install git and node.js (currently version 0.4.2)
+
+	$ sudo port selfupdate
+	$ sudo port install git nodejs
 
 Checkout the code and submodules:
 
@@ -25,11 +24,14 @@ Adding submodules
 Where we depend on other peoples code, we can tell git to add it as a submodule. 
 This makes it appear to be part of our code tree, whilst still hosted in it's own repo.
 
-
-E.g. Currently we dont need npm as Oli's magic git submodule command did the business
-From repo root: 
-
 	$ git submodule add https://github.com/ncr/node.ws.js.git server/node_modules/
+
+Submodules in use are:
+- npm
+- jasmin
+
+See .gitmodules for the authoritative list.
+
 
 Unit tests
 ----------
@@ -41,7 +43,6 @@ Put unit tests in the spec directory. To run node.js tests
 	$ cd test
 	$ node specs.js
  
-
 [sweded]:http://en.wikipedia.org/wiki/Sweded#.22Sweded.22
 [jasmine-node]:https://github.com/mhevery/jasmine-node
 
