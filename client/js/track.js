@@ -88,11 +88,24 @@ $(document).ready(function() {
 					//ws.send(JSON.stringify({id:self.getId(), }));			    					    		
 				}
 				
-				camera.position.x = playerCubes[self.getId()].position.x;
-				camera.position.y = playerCubes[self.getId()].position.y;
+				var avg, sum;
 				
-				camera.target.position.x = playerCubes[self.getId()].position.x;
-				camera.target.position.y = playerCubes[self.getId()].position.y;
+				avg = sum = {x:0, y:0};
+				
+				for(var i = 0, len = players.length; i < len; ++i) {
+				
+					sum.x += playerCubes[players[i].getId()].position.x;
+					sum.y += playerCubes[players[i].getId()].position.y;
+				}
+				
+				avg.x = sum.x/players.length;
+				avg.y = sum.y/players.length;
+				
+				camera.position.x = avg.x;
+				camera.position.y = avg.y;
+				
+				camera.target.position.x = avg.x;
+				camera.target.position.y = avg.y;
 			}
 		    	
 		  var id = setInterval(repeat, 10)
@@ -108,7 +121,7 @@ $(document).ready(function() {
 	  	new THREE.MeshBasicMaterial({map:ImageUtils.loadTexture('img/track.jpg')})
 	  );
 	  
-	  bg.position.z = -10;
+	  bg.position.z = -1;
 	  scene.addObject(bg);
 
 	  renderer = new THREE.CanvasRenderer();
