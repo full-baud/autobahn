@@ -19,10 +19,6 @@ Checkout the code and submodules:
 	$ git submodule update
 
 
-
-
-
-
 Adding submodules
 -----------------
 
@@ -35,8 +31,17 @@ From repo root:
 
 	$ git submodule add https://github.com/ncr/node.ws.js.git server/node_modules/
 
+Unit tests
+----------
 
+Added [jasmine-node][] test framework.
+	$ git submodule add https://github.com/mhevery/jasmine-node.git test
+
+Put unit tests in the spec directory. To run node.js tests
+	$ cd test
+	$ node specs.js
+ 
 
 [sweded]:http://en.wikipedia.org/wiki/Sweded#.22Sweded.22
-
+[jasmine-node]:https://github.com/mhevery/jasmine-node
 
