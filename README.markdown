@@ -4,7 +4,7 @@ Autobahn README
 Autobahn is [sweded][] micromachines
 
 Requirements
------------
+------------
 
 Install git and node.js (currently version 0.4.2)
 
@@ -59,7 +59,14 @@ Teh awesomenesses.
 <img src="https://github.com/full-baud/autobahn/raw/master/docs/img/autobahn-0-space.jpg" />
 
 
+Thoughts
+--------
 
+### 2011.09.12
+
+Server side, I've added in a check for users trying to update other users games or personal details. Since there is a
+one to one relationship with players and the socket they connect on, we could do away with the userId parameter to all
+ of the request methods.
 
 
 

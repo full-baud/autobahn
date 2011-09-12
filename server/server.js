@@ -1,8 +1,13 @@
 var sys = require('sys'),
-     ws = require('ws')
+     ws = require('ws');
 
-// vary this to change the speed of the app...
-var runLoopInterval = 20;
+// Array Remove - By John Resig (MIT Licensed)
+// http://ejohn.org/blog/javascript-array-remove/
+Array.prototype.remove = function(from, to) {
+	var rest = this.slice((to || from) + 1 || this.length);
+	this.length = from < 0 ? this.length + from : from;
+	return this.push.apply(this, rest);
+};
 
 Player = function() {
 	return {
@@ -17,25 +22,6 @@ Player = function() {
 		// this player's socket connection
 		socket: null,
 		
-		buttons: {
-			up: false,
-			down: false,
-			left: false,
-			right: false
-		},
-		
-		position: {
-			x: 0,
-			y: 0,
-			z: 0
-		},
-		
-		velocity: {
-			angle: 0,
-			elevation: 0,
-			speed: 0
-		},
-		
 		invoke: function(methodName, args) {
 			this.socket.write(JSON.stringify({
 				action: methodName,
@@ -47,37 +33,46 @@ Player = function() {
 
 Game = function() {
 	return {
-		numPlayers: 2,
-		title: "Lounge",
+		maxPlayers: 2,
+		title: "",
 		players: []
 	}
 };
 
 var autoBahn = {
-	// games are in progress
-	games: {
-		
-	},
 	
-	players: {
-		
-	},
+	// Games in progress
+	games: {},
 	
-	getLoungeList: function(userId) {
-		sys.puts("asked for lounge list");
+	// Players connected to AutoBahn
+	players: {},
+
+	/**
+	 * Returns the list of games not currently full.
+	 * 
+	 * @param socket
+	 * @param userId
+	 */
+	getLoungeList: function(socket, userId) {
+		sys.puts(userId + " asked for lounge list");
 		
 		var player = autoBahn.players[userId];
 		
 		if(!player) {
 			sys.puts("Could not find player with id " + userId);
 			
-			return;
+			return false;
 		}
 		
 		var lounges = [];
 		
-		for(key in autoBahn.games) {
-			if(autoBahn.games[key].players == autoBahn.games[key].numPlayers) {
+		for(var key in autoBahn.games) {
+			
+			if(autoBahn.games[key].players.length == autoBahn.games[key].maxPlayers) {
+				continue;
+			}
+			
+			if(autoBahn.games[key].players.indexOf(player) != -1) {
 				continue;
 			}
 			
@@ -87,40 +82,43 @@ var autoBahn = {
 			});
 		}
 		
-		player.invoke("gotLoungeList", [lounges]);
+		return lounges;
 	},
 	
-	createGame: function(userId, gameTitle, numPlayers) {
+	createGame: function(socket, userId, gameTitle, maxPlayers) {
 		var player = autoBahn.players[userId];
 		
 		if(!player) {
 			sys.puts("Could not find player with id " + userId);
 			
-			return;
+			return false;
 		}
 		
-		var id = "g" + Math.round(Math.random() * 1000000);
+		// No creating games on behalf of other players
+		if(player.socket != socket) {
+			sys.puts('Unauthorised createGame request from user masquerading as ' + userId + ' from ' + socket.remoteAddress);
+			
+			return false;
+		}
+		
+		var id;
+		
+		while(!id || autoBahn.games[id]) id = "g" + Math.round(Math.random() * 1000000);
 		
 		var game = new Game();
-		game.numPlayers = parseInt(numPlayers);
-		game.title = gameTitle;
+		
+		maxPlayers = parseInt(maxPlayers);
+		
+		game.maxPlayers = isNaN(maxPlayers) ? 2 : maxPlayers;
+		game.title = gameTitle ? gameTitle : id;
 		
 		autoBahn.games[id] = game;
 		
-		autoBahn.joinGame(userId, id);
+		return autoBahn.joinGame(socket, userId, id);
 	},
 	
-	joinGame: function(userId, gameId) {
-		sys.puts("user " + userId + " trying to join game " + gameId);
-		
-		// get passed game
-		var game = autoBahn.games[gameId];
-		
-		if(!game) {
-			sys.puts("Could not find game with id " + gameId);
-			
-			return;
-		}
+	joinGame: function(socket, userId, gameId) {
+		sys.puts("User " + userId + " trying to join game " + gameId);
 		
 		// get passed player
 		var player = autoBahn.players[userId];
@@ -128,131 +126,240 @@ var autoBahn = {
 		if(!player) {
 			sys.puts("Could not find player with id " + userId);
 			
-			return;
+			return false;
+		}
+		
+		// No joining games on behalf of other players
+		if(player.socket != socket) {
+			sys.puts('Unauthorised joinGame request from user masquerading as ' + userId + ' from ' + socket.remoteAddress);
+			
+			return false;
+		}
+		
+		// get passed game
+		var game = autoBahn.games[gameId];
+		
+		if(!game) {
+			sys.puts("Could not find game with id " + gameId);
+			
+			return false;
 		}
 		
 		// make sure it's not full already
-		if(game.players.length == game.numPlayers) {
+		if(game.players.length == game.maxPlayers) {
 			sys.puts("already " + game.players.length + " connected...");
 			sys.puts("players: " + game.players);
 			
-			return;
+			return false;
+		}
+		
+		// Tell other players a new challenger has entered the arena
+		for(var i = 0, ilen = game.players.length; i < ilen; ++i) {
+			game.players[i].invoke('playerJoinedGame', [gameId, userId, player.name, player.avatar]);
 		}
 		
 		// add player
 		game.players.push(player);
 		
-		sys.puts("now have " + game.players.length + " of " + game.numPlayers + " for game " + gameId);
+		sys.puts("now have " + game.players.length + " of " + game.maxPlayers + " for game " + gameId);
 		
 		// do we start the game?
-		if(game.players.length == game.numPlayers) {
+		if(game.players.length == game.maxPlayers) {
 			// game on
 			for(var i = 0; i < game.players.length; i++) {
 				game.players[i].invoke("startGame", [gameId]);
 			}
 			
-			autoBahn._startGame(gameId, game);
+		}
+		
+		return true;
+	},
+
+	/**
+	 * Removes a user from a game. Informs other users and deletes the game if not more players are left.
+	 * 
+	 * @param socket
+	 * @param userId
+	 * @param gameId
+	 */
+	leaveGame:function(socket, userId, gameId) {
+		
+		var player = autoBahn.players[userId];
+		
+		if(!player) {
+			sys.puts("Could not find player with id " + userId);
+			
+			return false;
+		}
+		
+		// No leaving games on behalf of other players
+		if(player.socket != socket) {
+			sys.puts('Unauthorised leaveGame request from user masquerading as ' + userId + ' from ' + socket.remoteAddress);
+			
+			return false;
+		}
+		
+		// get passed game
+		var game = autoBahn.games[gameId];
+		
+		if(!game) {
+			sys.puts("Could not find game with id " + gameId);
+			
+			return false;
+		}
+		
+		// No leaving games you don't belong to
+		var playerIndex = game.players.indexOf(player);
+		
+		if(playerIndex == -1) {
+			sys.puts('Unauthorised leaveGame request from ' + userId + ' for game ' + gameId);
+			
+			return false;
+		}
+		
+		game.players = game.players.remove(playerIndex);
+		
+		var playersLeft = game.players.length;
+		
+		if(playersLeft) {
+		
+			for(var i = 0; i < playersLeft; ++i) {
+				game.players[i].invoke("leftGame", [gameId, userId]);
+			}
+		
 		} else {
-			// no, bounce to chatroom...
-			player.invoke("joinedGame", [gameId]);
+			
+			// All players left the game
+			delete autoBahn.games[gameId];
 		}
+		
+		return true;
 	},
-	
-	_startGame: function(gameId, game) {
-		game.interval = setInterval(function() {
-			var positions = [];
-			var foo = 10;
-			
-			// update player positions
-			for(var i = 0; i < game.players.length; i++) {
-				var player = game.players[i];
-				
-				if(player.buttons.up) {
-					player.position.x -= foo;
-				}
-				
-				if(player.buttons.down) {
-					player.position.x += foo;
-				}
-				
-				if(player.buttons.right) {
-					player.position.y += foo;
-				}
-				
-				if(player.buttons.left) {
-					player.position.y -= foo;
-				}
-				
-				// this will be sent to the client
-				positions.push({
-					id: player.id,
-					player: "player" + i,
-					position: player.position,
-					velocity: player.velocity
-				});
-			}
-			
-			// inform all players of new positions
-			for(var i = 0; i < game.players.length; i++) {
-				game.players[i].invoke("updateGame", [gameId, positions]);
-			}
-		}, runLoopInterval);
-	},
-	
-	receiveKeyUp: function(userId, gameId, keyCode) {
+
+	/**
+	 * Allows a player to update their name from the random assigned user ID to a human readable name.
+	 * 
+	 * @param socket
+	 * @param userId
+	 * @param name
+	 */
+	setPlayerName:function(socket, userId, name) {
+		
 		var player = autoBahn.players[userId];
 		
 		if(!player) {
 			sys.puts("Could not find player with id " + userId);
 			
-			return;
+			return false;
 		}
 		
-		if(keyCode == "Up") {
-			player.buttons.up = false;
-		} else if(keyCode == "Down") {
-			player.buttons.down = false;
-		} else if(keyCode == "Right") {
-			player.buttons.right = false;
-		} else if(keyCode == "Left") {
-			player.buttons.left = false;
+		// No changing names on behalf of other players
+		if(player.socket != socket) {
+			sys.puts('Unauthorised setPlayerName request from user masquerading as ' + userId + ' from ' + socket.remoteAddress);
+			
+			return false;
 		}
+		
+		player.name = name;
+		
+		// TODO: Push this information to other players in any games userId is in?
+		
+		return true;
 	},
-	
-	receiveKeyDown: function(userId, gameId, keyCode) {
+
+	/**
+	 * Allows a player to set their avatar (url).
+	 * 
+	 * @param socket
+	 * @param userId
+	 * @param avatar
+	 */
+	setPlayerAvatar:function(socket, userId, avatar) {
+		
 		var player = autoBahn.players[userId];
 		
 		if(!player) {
 			sys.puts("Could not find player with id " + userId);
 			
-			return;
+			return false;
 		}
 		
-		if(keyCode == "Up") {
-			player.buttons.up = true;
-		} else if(keyCode == "Down") {
-			player.buttons.down = true;
-		} else if(keyCode == "Right") {
-			player.buttons.right = true;
-		} else if(keyCode == "Left") {
-			player.buttons.left = true;
+		// No changing avatars on behalf of other players
+		if(player.socket != socket) {
+			sys.puts('Unauthorised setPlayerAvatar request from user masquerading as ' + userId + ' from ' + socket.remoteAddress);
+			
+			return false;
 		}
 		
-		sys.puts("recieved " + userId + " " + gameId + " " + keyCode);
+		player.avatar = avatar;
+		
+		// TODO: Push this information to other players in any games userId is in?
+		
+		return true;
+	},
+	
+	updateGame:function(socket, userId, gameId, position, velocity) {
+		
+		sys.puts('Recieved update from ' + userId);
+		
+		var player = autoBahn.players[userId];
+		
+		if(!player) {
+			sys.puts("Could not find player with id " + userId);
+			
+			return false;
+		}
+		
+		// No updating the game on behalf of other players
+		if(player.socket != socket) {
+			sys.puts('Unauthorised updateGame request from user masquerading as ' + userId + ' from ' + socket.remoteAddress);
+			
+			return false;
+		}
+		
+		// get passed game
+		var game = autoBahn.games[gameId];
+		
+		if(!game) {
+			sys.puts("Could not find game with id " + gameId);
+			
+			return false;
+		}
+		
+		// No updating games you don't belong to
+		if(!game.players[userId]) {
+			sys.puts('Unauthorised updateGame request from ' + userId + ' for game ' + gameId);
+			
+			return false;
+		}
+		
+		// inform all other players someone moved
+		for(var i = 0, ilen = game.players.length; i < ilen; ++i) {
+			
+			if(game.players[i].id != userId) {
+				
+				game.players[i].invoke("updateGame", [gameId, userId, position, velocity]);
+			}
+		}
+		
+		return true;
 	}
 };
 
 var server = ws.createServer(function(socket) {
+	
 	socket.addListener("connect", function(resource) {
-		sys.puts("client connected from " + resource);
+		sys.puts("Client connected from " + resource);
 		
-		var id = "u" + Math.round(Math.random() * 1000000);
+		var id;
+		
+		while(!id || autoBahn.players[id]) id = "u" + Math.round(Math.random() * 1000000);
 		
 		// new user, create their player
 		var player = new Player();
+		
 		player.id = id;
-		player.name = "Bob";
-		player.avatar = "asfoj0f9jojs";
+		player.name = id;
 		player.socket = socket;
 		
 		autoBahn.players[id] = player;
@@ -261,35 +368,61 @@ var server = ws.createServer(function(socket) {
 	});
 	
 	// answers method calls from the client
-	socket.addListener("data", function (data) {
-		sys.puts("got " + data);
+	socket.addListener("data", function(data) {
+		sys.puts("Got " + data);
 		
 		//{action: "methodName", args: [bar, baz]}
 		
 		try {
-			var methodCall = eval("(" + data + ")");
-			//var methodCall = JSON.parse(data);
+			//var methodCall = eval("(" + data + ")");
+			var methodCall = JSON.parse(data);
 			
 			if(methodCall && methodCall.action && autoBahn[methodCall.action]) {
-				sys.puts("calling method " + methodCall.action + " with args " + methodCall.args);
+				sys.puts("Calling method " + methodCall.action + " with args " + methodCall.args);
 				
 				var output = {
 					action: methodCall.action,
 					args: methodCall.args,
-					response: autoBahn[methodCall.action].apply(this, methodCall.args ? methodCall.args : [])
+					response: autoBahn[methodCall.action].apply(this, [socket].concat(methodCall.args))
 				}
 				
 				socket.write(JSON.stringify(output)+ "\r\n");
 			}
+			
 		} catch(e) {
 			sys.puts(":( " + e);
-			for(key in e) {
+			for(var key in e) {
 				sys.puts(e[key]);
 			}
 		}
 	});
 	
-	socket.addListener("close", function () {
-		sys.puts("client left");
+	socket.addListener("close", function() {
+		
+		var player;
+		
+		// Get player
+		for(var userId in autoBahn.players) {
+			
+			if(autoBahn.players[userId].socket == socket) {
+				
+				player = autoBahn.players[userId];
+				break;
+			}
+		}
+		
+		sys.puts(player.id + " left the lounge");
+		
+		delete autoBahn.players[userId];
+		
+		for(var gameId in autoBahn.games) {
+			
+			if(autoBahn.games[gameId].players.indexOf(player) != -1) {
+				
+				autoBahn.leaveGame(socket, player.id, gameId);
+			}
+		}
+		
 	});
+	
 }).listen(8080);

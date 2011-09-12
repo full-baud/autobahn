@@ -4,7 +4,7 @@ var socket;
 
 var config = {
 	//server: "ws://localhost:8000/socket/server/lounge"
-	server: "ws://192.168.0.19:8080"
+	server: "ws://localhost:8080"
 };
 
 client = {
@@ -35,41 +35,6 @@ client = {
 			
 			return false;
 		};
-	},
-	
-	gotLoungeList: function(loungeList) {
-		console.dir(loungeList);
-		
-		var tbody = document.getElementById("loungeTableList");
-		
-		for(var i = 0; i < loungeList.length; i++) {
-			var lounge = loungeList[i];
-			
-			var row = document.createElement("tr");
-			var title = document.createElement("td");
-			title.appendChild(document.createTextNode(lounge.lounge.title));
-			row.appendChild(title);
-			
-			var players = document.createElement("td");
-			players.appendChild(document.createTextNode(lounge.lounge.players.length + "/" + lounge.lounge.numPlayers));
-			row.appendChild(players);
-			
-			var button = document.createElement("input");
-			button.type = "submit";
-			button.value = "Join";
-			button.onclick = function() {
-				socket.invoke("joinGame", [client.id, lounge.id]);
-				
-				return false;
-			};
-			
-			var joinButton = document.createElement("td");
-			joinButton.appendChild(button);
-			row.appendChild(joinButton);
-			
-			tbody.appendChild(row);
-		}
-		
 	},
 	
 	startGame: function(id) {
@@ -110,11 +75,7 @@ client = {
 		socket.invoke(remoteMethod, [client.id, client.game, event.keyIdentifier]);
 		
 		client._lastKeyPressSent = code;
-	},
-	
-	joinedGame: function(gameId) {
-		document.getElementById("loungeList").style.display = "none";
-	},
+	}, 
 	
 	updateGame: function(id, positions) {
 		// positions is an array of objects that look like this:
@@ -150,6 +111,56 @@ client = {
 			div.style.top = position.position.x + "px";
 			div.style.left = position.position.y + "px";
 		}
+	},
+
+	/**
+	 * This object contains method calls that are invoked when a 'response'
+	 * is received from the server. All functions should take two params: 
+	 * 
+	 * 1. The response object from the server
+	 * 2. An array of the arguments that were sent to the server (optional)
+	 */
+	response: {
+		
+		getLoungeList: function(loungeList) {
+			console.dir(loungeList);
+			
+			var tbody = document.getElementById("loungeTableList");
+			
+			for(var i = 0; i < loungeList.length; i++) {
+				var lounge = loungeList[i];
+				
+				var row = document.createElement("tr");
+				var title = document.createElement("td");
+				title.appendChild(document.createTextNode(lounge.lounge.title));
+				row.appendChild(title);
+				
+				var players = document.createElement("td");
+				players.appendChild(document.createTextNode(lounge.lounge.players.length + "/" + lounge.lounge.numPlayers));
+				row.appendChild(players);
+				
+				var button = document.createElement("input");
+				button.type = "submit";
+				button.value = "Join";
+				button.onclick = function() {
+					socket.invoke("joinGame", [client.id, lounge.id]);
+					
+					return false;
+				};
+				
+				var joinButton = document.createElement("td");
+				joinButton.appendChild(button);
+				row.appendChild(joinButton);
+				
+				tbody.appendChild(row);
+			}
+		},
+		
+		joinGame: function(joined) {
+			if(joined) {
+				document.getElementById("loungeList").style.display = "none";
+			}
+		}
 	}
 };
 
@@ -169,22 +180,36 @@ dojo.addOnLoad(function() {
 		}
 		
 		try {
-			var methodCall = eval("(" + message.data + ")");
 			
-			if(methodCall && methodCall.action && client[methodCall.action]) {
-				client[methodCall.action].apply(this, methodCall.args ? methodCall.args : []);
+			//var methodCall = eval("(" + message.data + ")");
+			var methodCall = JSON.parse(message.data);
+			
+			// Is this a response?
+			if('response' in methodCall) {
+				
+				if(methodCall && methodCall.action && client.response[methodCall.action]) {
+					client.response[methodCall.action].apply(this, [methodCall.response, methodCall.args ? methodCall.args : []]);
+				}
+				
+			} else {
+				
+				if(methodCall && methodCall.action && client[methodCall.action]) {
+					client[methodCall.action].apply(this, methodCall.args ? methodCall.args : []);
+				}
 			}
+			
 		} catch(e) {
+			
 			console.error(e);
 		}
-		
-		
 	}
+	
 	socket.onerror = function(message) {
 		console.log("error!");
 		
 		console.error(message);
 	}
+	
 	socket.invoke = function(method, args) {
 		socket.send(JSON.stringify({
 			action: method,
