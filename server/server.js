@@ -409,7 +409,7 @@ var server = ws.createServer(function(socket) {
 	});
 	
 	socket.addListener("close", function() {
-		/*
+		
 		var player;
 		
 		// Get player
@@ -433,7 +433,6 @@ var server = ws.createServer(function(socket) {
 		}
 		
 		delete autoBahn.players[userId];
-		*/
 	});
 	
 }).listen(8080);
