@@ -10,16 +10,20 @@
 		<link rel="stylesheet" href="css/lounge.css" type="text/css" media="all" />
 	</head>
 	<body>
-
-	
-		
-		<div id="container">		
+		<div id="container">
 			<h1>AutoBahn</h1>
+			<form id="playerDetails">
+				<h2>Create player</h2>
+				<input placeholder="Your name" id="playerName"/>
+				<input placeholder="Avatar URL" id="playerAvatar"/>
+				<input type="button" id="createNewPlayerButton" value="Create" />
+			</form>
 			<div id="loungeList">
 				<form>
 					<h2>Create new game</h2>
 					<input placeholder="Title" id="createNewGameTitle" />
 					<select id="createNewGamePlayers">
+						<option value="1">Number of players...</option>
 						<option>1</option>
 						<option>2</option>
 						<option>4</option>
@@ -28,13 +32,14 @@
 					</select>
 					<input type="submit" id="createNewGameButton" value="Create" />
 				</form>
-				<table>
+				<h2>Join game</h2>
+				<table width="100%" cellpadding="0" cellspacing="0">
 					<thead>
-						<th>
-							<td>Game name</td>
-							<td>Players</td>
-							<td>&nbsp;</td>
-						</th>
+						<tr>
+							<th>Game name</th>
+							<th>Players</th>
+							<th></th>
+						</tr>
 					</thead>
 					<tbody id="loungeTableList">
 					</tbody>
@@ -42,97 +47,100 @@
 			</div>
 		</div> 
 		
-		<script type="text/javascript"> 
+		<script>
+			
+			(function() {
  
-			var QUALITY = 10,
-			WIDTH = Math.floor(window.innerWidth / QUALITY), HEIGHT = Math.floor(window.innerHeight / QUALITY), SIZE = WIDTH * HEIGHT,
- 
-			context, image, data,
-			buffer1, buffer2, turbulence,
- 
-			isUserInteracting, pointers, count = 0;
- 
-			init();
-			setInterval(loop, 1000 / 60);
- 
-			function init() {
- 
-				var container, canvas;
- 
-				container = document.getElementById('container');
- 
-				canvas = document.createElement("canvas");
-				canvas.width = WIDTH
-				canvas.height = HEIGHT;
-				canvas.style.width = window.innerWidth + "px";
-				canvas.style.height = window.innerHeight + "px";
-				container.appendChild(canvas);
- 
-				context = canvas.getContext("2d");
-				context.fillStyle = "rgb(0, 0, 0)";
-				context.fillRect (0, 0, WIDTH, HEIGHT);
-				image = context.getImageData(0, 0, WIDTH, HEIGHT);
-				data = image.data;
- 
-				buffer1 = [];
-				buffer2 = [];
-				turbulence = [];
- 
-				for (var i = 0; i < SIZE + WIDTH; i ++) {
- 
-					buffer1[i] = 0;
-					buffer2[i] = 0;
-					turbulence[i] = Math.random();
-				}
-			}
- 			 
-			//
- 
-			function emit(x, y) {
- 
-				buffer1[ Math.floor(x) + (Math.floor(y) * WIDTH)] = 1000;
- 
-			}
- 
-			function loop() {
- 
-				if (isUserInteracting) {
- 
-					for (var i = 0; i < pointers.length; i++) {
- 
-						emit(pointers[i][0], pointers[i][1]);
- 
+				var QUALITY = 10,
+				WIDTH = Math.floor(window.innerWidth / QUALITY), HEIGHT = Math.floor(window.innerHeight / QUALITY), SIZE = WIDTH * HEIGHT,
+	 
+				context, image, data,
+				buffer1, buffer2, turbulence,
+	 
+				isUserInteracting, pointers, count = 0;
+	 
+				init();
+				setInterval(loop, 1000 / 60);
+	 
+				function init() {
+	 
+					var canvas = document.createElement("canvas");
+					
+					canvas.id = 'flames';
+					canvas.width = WIDTH
+					canvas.height = HEIGHT;
+					canvas.style.width = window.innerWidth + "px";
+					canvas.style.height = window.innerHeight + "px";
+					
+					dojo.place(canvas, dojo.body(), 'first');
+	 
+					context = canvas.getContext("2d");
+					context.fillStyle = "rgb(0, 0, 0)";
+					context.fillRect (0, 0, WIDTH, HEIGHT);
+					image = context.getImageData(0, 0, WIDTH, HEIGHT);
+					data = image.data;
+	 
+					buffer1 = [];
+					buffer2 = [];
+					turbulence = [];
+	 
+					for (var i = 0; i < SIZE + WIDTH; i ++) {
+	 
+						buffer1[i] = 0;
+						buffer2[i] = 0;
+						turbulence[i] = Math.random();
 					}
 				}
- 
-				var iMax = WIDTH / 5;
- 
-				for (var i = 0; i < iMax; i ++) {
- 
-					emit(Math.random() * WIDTH, HEIGHT);
- 
+				 
+				//
+	 
+				function emit(x, y) {
+	 
+					buffer1[ Math.floor(x) + (Math.floor(y) * WIDTH)] = 1000;
+	 
 				}
- 
-				var i4, pixel;
- 
-				for (var i = WIDTH; i < SIZE; i ++) {
- 
-					i4 = i * 4;
- 
-					pixel = buffer2[i] = ((buffer1[i - 1] + buffer1[i + 1]) * .235) + (buffer1[i + WIDTH] * turbulence[(i + count) % SIZE]);
- 
-					data[ i4 ] = Math.min( 255, pixel << 3 );
-					data[ i4 + 1 ] = Math.min( 255, pixel );
-					data[ i4 + 2 ] = Math.min( 255, pixel >> 1 );
+	 
+				function loop() {
+	 
+					if (isUserInteracting) {
+	 
+						for (var i = 0; i < pointers.length; i++) {
+	 
+							emit(pointers[i][0], pointers[i][1]);
+	 
+						}
+					}
+	 
+					var iMax = WIDTH / 5;
+	 
+					for (var i = 0; i < iMax; i ++) {
+	 
+						emit(Math.random() * WIDTH, HEIGHT);
+	 
+					}
+	 
+					var i4, pixel;
+	 
+					for (var i = WIDTH; i < SIZE; i ++) {
+	 
+						i4 = i * 4;
+	 
+						pixel = buffer2[i] = ((buffer1[i - 1] + buffer1[i + 1]) * .235) + (buffer1[i + WIDTH] * turbulence[(i + count) % SIZE]);
+	 
+						data[ i4 ] = Math.min( 255, pixel << 3 );
+						data[ i4 + 1 ] = Math.min( 255, pixel );
+						data[ i4 + 2 ] = Math.min( 255, pixel >> 1 );
+					}
+	 
+					buffer1 = buffer2.slice(0);
+	 
+					context.putImageData(image, 0, 0);
+	 
+					count += Math.floor(Math.random() * SIZE);
 				}
- 
-				buffer1 = buffer2.slice(0);
- 
-				context.putImageData(image, 0, 0);
- 
-				count += Math.floor(Math.random() * SIZE);
-			}
- 
+			
+			})();
+ 			
 		</script>		
 
 	</body>

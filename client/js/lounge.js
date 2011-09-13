@@ -1,3 +1,4 @@
+dojo.require("dojo.cookie");
 dojo.require("dojox.grid.DataGrid");
 
 var socket;
@@ -23,7 +24,7 @@ client = {
 		// set up the new game button
 		document.getElementById("createNewGameButton").onclick = function() {
 			var gameName = document.getElementById("createNewGameTitle").value;
-			var numPlayers = document.getElementById("createNewGamePlayers").value;
+			var maxPlayers = parseInt(document.getElementById("createNewGamePlayers").value);
 			
 			if(!gameName) {
 				document.getElementById("createNewGameTitle").style.borderColor = "red";
@@ -31,7 +32,7 @@ client = {
 				return false;
 			}
 			
-			socket.invoke("createGame", [id, gameName, numPlayers]);
+			socket.invoke("createGame", [id, gameName, maxPlayers]);
 			
 			return false;
 		};
@@ -127,6 +128,8 @@ client = {
 			
 			var tbody = document.getElementById("loungeTableList");
 			
+			dojo.empty("loungeTableList");
+			
 			for(var i = 0; i < loungeList.length; i++) {
 				var lounge = loungeList[i];
 				
@@ -136,7 +139,7 @@ client = {
 				row.appendChild(title);
 				
 				var players = document.createElement("td");
-				players.appendChild(document.createTextNode(lounge.lounge.players.length + "/" + lounge.lounge.numPlayers));
+				players.appendChild(document.createTextNode(lounge.lounge.players.length + "/" + lounge.lounge.maxPlayers));
 				row.appendChild(players);
 				
 				var button = document.createElement("input");
@@ -156,9 +159,31 @@ client = {
 			}
 		},
 		
+		createGame:function(created) {
+			
+			if(created) {
+				
+				dojo.byId("container").style.display = "none";
+				
+				alert('Game created! Waiting for players...');
+				
+			} else {
+				
+				alert('Failed to create game');
+			}
+		},
+		
 		joinGame: function(joined) {
+			
 			if(joined) {
-				document.getElementById("loungeList").style.display = "none";
+				
+				dojo.byId("container").style.display = "none";
+				
+				alert('Game joined! Waiting for players...');
+				
+			} else {
+				
+				alert('Failed to join game');
 			}
 		}
 	}
@@ -167,10 +192,45 @@ client = {
 dojo.addOnLoad(function() {
 	console.log("loaded");
 	
+	var playerName = dojo.byId('playerName'),
+		playerAvatar = dojo.byId('playerAvatar');
+	
+	playerName.value = dojo.cookie("playerName") ? dojo.cookie("playerName") : '';
+	playerAvatar.value = dojo.cookie("playerAvatar") ? dojo.cookie("playerAvatar") : '';
+	
+	dojo.connect(dojo.byId('createNewPlayerButton'), 'onclick', function() {
+		
+		var name = playerName.value,
+			avatar = playerAvatar.value;
+		
+		dojo.byId('playerDetails').style.display = 'none';
+		dojo.byId('loungeList').style.display = 'block';
+		
+		if(name) {
+			
+			dojo.cookie("playerName", name, {
+				expires: 365
+			});
+			
+			socket.invoke('setPlayerName', [client.id, name]);
+		}
+		
+		if(avatar) {
+			
+			dojo.cookie("playerAvatar", name, {
+				expires: 365
+			});
+			
+			socket.invoke('setPlayerAvatar', [client.id, avatar]);
+		}
+	});
+	
 	socket = new WebSocket(config.server);
+	
 	socket.onopen = function(message) {
 		console.log("open");
 	}
+	
 	socket.onmessage = function(message) {
 		//console.log("connected " + message);
 		//console.dir(message);
@@ -188,12 +248,18 @@ dojo.addOnLoad(function() {
 			if('response' in methodCall) {
 				
 				if(methodCall && methodCall.action && client.response[methodCall.action]) {
+					
+					console.log('Got ' + methodCall.action + ' response');
+					
 					client.response[methodCall.action].apply(this, [methodCall.response, methodCall.args ? methodCall.args : []]);
 				}
 				
 			} else {
 				
 				if(methodCall && methodCall.action && client[methodCall.action]) {
+					
+					console.log('Got ' + methodCall.action + ' request');
+					
 					client[methodCall.action].apply(this, methodCall.args ? methodCall.args : []);
 				}
 			}

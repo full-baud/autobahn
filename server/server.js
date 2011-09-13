@@ -17,7 +17,7 @@ Player = function() {
 		name: "",
 		
 		// eg. MD5'd email for gravatar
-		avatar: "",
+		avatar: 'http://www.gravatar.com/avatar/',
 		
 		// this player's socket connection
 		socket: null,
@@ -27,6 +27,10 @@ Player = function() {
 				action: methodName,
 				args: args ? args : []
 			})+ "\r\n");
+		},
+		
+		toJSON: function() {
+			return {id: this.id, name: this.name, avatar: this.avatar};
 		}
 	}
 };
@@ -260,9 +264,12 @@ var autoBahn = {
 			return false;
 		}
 		
-		player.name = name;
-		
-		// TODO: Push this information to other players in any games userId is in?
+		if(name) {
+			
+			player.name = name;
+			
+			// TODO: Push this information to other players in any games userId is in?
+		}
 		
 		return true;
 	},
@@ -291,9 +298,12 @@ var autoBahn = {
 			return false;
 		}
 		
-		player.avatar = avatar;
+		if(avatar) {
+			
+			player.avatar = avatar;
 		
-		// TODO: Push this information to other players in any games userId is in?
+			// TODO: Push this information to other players in any games userId is in?
+		}
 		
 		return true;
 	},
@@ -349,7 +359,7 @@ var autoBahn = {
 var server = ws.createServer(function(socket) {
 	
 	socket.addListener("connect", function(resource) {
-		sys.puts("Client connected from " + resource);
+		sys.puts("Client connected from " + socket.remoteAddress);
 		
 		var id;
 		
@@ -369,24 +379,25 @@ var server = ws.createServer(function(socket) {
 	
 	// answers method calls from the client
 	socket.addListener("data", function(data) {
-		sys.puts("Got " + data);
 		
-		//{action: "methodName", args: [bar, baz]}
+		//Expecting: {action: "methodName", args: [bar, baz]}
 		
 		try {
-			//var methodCall = eval("(" + data + ")");
+			
 			var methodCall = JSON.parse(data);
 			
 			if(methodCall && methodCall.action && autoBahn[methodCall.action]) {
 				sys.puts("Calling method " + methodCall.action + " with args " + methodCall.args);
 				
-				var output = {
+				var output = JSON.stringify({
 					action: methodCall.action,
 					args: methodCall.args,
 					response: autoBahn[methodCall.action].apply(this, [socket].concat(methodCall.args))
-				}
+				}) + "\r\n";
 				
-				socket.write(JSON.stringify(output)+ "\r\n");
+				sys.puts('Sending response: ' + output);
+				
+				socket.write(output);
 			}
 			
 		} catch(e) {
@@ -398,7 +409,7 @@ var server = ws.createServer(function(socket) {
 	});
 	
 	socket.addListener("close", function() {
-		
+		/*
 		var player;
 		
 		// Get player
@@ -411,9 +422,7 @@ var server = ws.createServer(function(socket) {
 			}
 		}
 		
-		sys.puts(player.id + " left the lounge");
-		
-		delete autoBahn.players[userId];
+		sys.puts(player.id + " left the lounge\n");
 		
 		for(var gameId in autoBahn.games) {
 			
@@ -423,6 +432,8 @@ var server = ws.createServer(function(socket) {
 			}
 		}
 		
+		delete autoBahn.players[userId];
+		*/
 	});
 	
 }).listen(8080);

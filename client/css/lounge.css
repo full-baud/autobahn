@@ -1,31 +1,56 @@
 /* ---- lounge.css ----------------------------------------------------------- */
-
 body {
 	background-color: black;
 	margin:0;
 	padding:0;
-	text-align: center;
 }
-
+h1, h2 {
+	margin: .5em 0;
+}
+h1:first-child, h2:first-child {
+	margin-top: 0;
+}
 h1 { 
 /* 	font-family: 'UnifrakturMaguntia', serif;  */
 	font-family: 'Vollkorn', serif;
 	font-size: 5em;
-	top: 80%;
-	position: absolute;
+	margin: 0;
+	position:fixed;
+	bottom:0;
 	color:black;
-	text-shadow: 3px 3px;
+	text-shadow: 0 0 3px #000;
 }
-
+#flames {
+	position:fixed;
+	top:0;
+	left:0;
+	z-index:1;
+}
+#container {
+	position:relative;
+	z-index:1;
+	float:left;
+	background-color: rgba(51, 51, 51, 0.8);
+	padding: 1em;
+	color:#fff;
+}
+#container h2 {
+	font-family: 'Vollkorn', serif;
+	color: #FFF;
+}
 #loungeList {
-    background-color: #333;
-    padding: 5px;
-    width: 400px;
-    text-align: left;
+	display:none;
 }
-#loungeList h2 {
-    font-family: 'Vollkorn', serif;
-    color: #FFF;
-    margin: 0;
-    padding: 0;
+#loungeList tr:nth-child(even) {
+	background-color: rgba(51, 51, 51, 0.4);
+}
+#loungeList tr:nth-child(odd) {
+	background-color: rgba(51, 51, 51, 0.2);
+}
+#loungeList th, #loungeList td {
+	padding: .25em;
+}
+#loungeList th {
+	background-color: rgba(51, 51, 51, 0.5);
+	text-align:left;
 }
