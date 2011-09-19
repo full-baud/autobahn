@@ -9,7 +9,7 @@ Array.prototype.remove = function(from, to) {
 	return this.push.apply(this, rest);
 };
 
-Player = function() {
+function Player() {
 	return {
 		id: "",
 		
@@ -33,15 +33,15 @@ Player = function() {
 			return {id: this.id, name: this.name, avatar: this.avatar};
 		}
 	}
-};
+}
 
-Game = function() {
+function Game() {
 	return {
 		maxPlayers: 2,
 		title: "",
 		players: []
 	}
-};
+}
 
 var autoBahn = {
 	
@@ -88,7 +88,16 @@ var autoBahn = {
 		
 		return lounges;
 	},
-	
+
+	/**
+	 * Creates a new game and joins the creator to the game.
+	 * 
+	 * @param socket
+	 * @param userId
+	 * @param gameTitle
+	 * @param maxPlayers
+	 * @return Array A pair, containing the gameId and the current player list
+	 */
 	createGame: function(socket, userId, gameTitle, maxPlayers) {
 		var player = autoBahn.players[userId];
 		
@@ -105,22 +114,30 @@ var autoBahn = {
 			return false;
 		}
 		
-		var id;
+		var gameId;
 		
-		while(!id || autoBahn.games[id]) id = "g" + Math.round(Math.random() * 1000000);
+		while(!gameId || autoBahn.games[gameId]) gameId = "g" + Math.round(Math.random() * 1000000);
 		
 		var game = new Game();
 		
 		maxPlayers = parseInt(maxPlayers);
 		
 		game.maxPlayers = isNaN(maxPlayers) ? 2 : maxPlayers;
-		game.title = gameTitle ? gameTitle : id;
+		game.title = gameTitle ? gameTitle : gameId;
 		
-		autoBahn.games[id] = game;
+		autoBahn.games[gameId] = game;
 		
-		return autoBahn.joinGame(socket, userId, id);
+		return autoBahn.joinGame(socket, userId, gameId);
 	},
-	
+
+	/**
+	 * Joins a user to a game and informs other players of the event.
+	 * 
+	 * @param socket
+	 * @param userId
+	 * @param gameId
+	 * @return Array A pair, containing the gameId and the current player list
+	 */
 	joinGame: function(socket, userId, gameId) {
 		sys.puts("User " + userId + " trying to join game " + gameId);
 		
@@ -159,7 +176,7 @@ var autoBahn = {
 		
 		// Tell other players a new challenger has entered the arena
 		for(var i = 0, ilen = game.players.length; i < ilen; ++i) {
-			game.players[i].invoke('playerJoinedGame', [gameId, userId, player.name, player.avatar]);
+			game.players[i].invoke('playerJoinedGame', [gameId, player]);
 		}
 		
 		// add player
@@ -176,7 +193,7 @@ var autoBahn = {
 			
 		}
 		
-		return true;
+		return [gameId, game.players.remove(game.players.indexOf(player))];
 	},
 
 	/**
@@ -389,10 +406,18 @@ var server = ws.createServer(function(socket) {
 			if(methodCall && methodCall.action && autoBahn[methodCall.action]) {
 				sys.puts("Calling method " + methodCall.action + " with args " + methodCall.args);
 				
+				var result = autoBahn[methodCall.action].apply(this, [socket].concat(methodCall.args));
+				
+				// Any result that is not already an array of arguments to pass to the client
+				// response function needs to be wrapped in an array.
+				if(!(result instanceof Array)) {
+					result = [result];
+				}
+				
 				var output = JSON.stringify({
 					action: methodCall.action,
 					args: methodCall.args,
-					response: autoBahn[methodCall.action].apply(this, [socket].concat(methodCall.args))
+					response: result
 				}) + "\r\n";
 				
 				sys.puts('Sending response: ' + output);

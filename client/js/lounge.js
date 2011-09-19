@@ -10,7 +10,8 @@ var config = {
 
 client = {
 	id: null,
-	game: null,
+	gameId: null,
+	players: {},
 	_lastKeyPressSent: null,
 	
 	setUserId: function(id) {
@@ -38,17 +39,40 @@ client = {
 		};
 	},
 	
-	startGame: function(id) {
-		console.log("should start game " + id);
+	startGame: function(gameId, players) {
+		
+		if(client.gameId != gameId) {
+			return;
+		}
+		
+		console.log("should start game " + gameId);
+		
+		// Update the players list (we may have missed a playerJoinedGame call)
+		for(var i = 0, len = players.length; i < len; ++i) {
+			client.players[players[i].id] = players[i];
+		}
 		
 		document.getElementById("loungeList").style.display = "none";
-		
-		client.game = id;
 		
 		dojo.connect(window, "onkeydown", client._keyDown);
 		dojo.connect(window, "onkeyup", client._keyUp);
 		
 		// do something here to show the track!
+	},
+
+	/**
+	 * Called when a player joins a game the client has joined.
+	 * 
+	 * @param gameId
+	 * @param player
+	 */
+	playerJoinedGame: function(gameId, player) {
+		
+		console.log(player + ' joined game ' + gameId);
+		
+		client.players[player.id] = player;
+		
+		// TODO: Feedback to the user
 	},
 	
 	_keyDown: function(event) {
@@ -73,7 +97,7 @@ client = {
 			return;	
 		}
 		
-		socket.invoke(remoteMethod, [client.id, client.game, event.keyIdentifier]);
+		socket.invoke(remoteMethod, [client.id, client.gameId, event.keyIdentifier]);
 		
 		client._lastKeyPressSent = code;
 	}, 
@@ -116,10 +140,8 @@ client = {
 
 	/**
 	 * This object contains method calls that are invoked when a 'response'
-	 * is received from the server. All functions should take two params: 
-	 * 
-	 * 1. The response object from the server
-	 * 2. An array of the arguments that were sent to the server (optional)
+	 * is received from the server. The last parameter of each function is
+	 * an array of the arguments originally passed to the server.
 	 */
 	response: {
 		
@@ -159,11 +181,18 @@ client = {
 			}
 		},
 		
-		createGame:function(created) {
+		createGame:function(gameId, players) {
 			
 			if(created) {
 				
 				dojo.byId("container").style.display = "none";
+				
+				client.gameId = gameId;
+				client.players = {};
+				
+				for(var i = 0, len = players.length; i < len; ++i) {
+					client.players[players[i].id] = players[i];
+				}
 				
 				alert('Game created! Waiting for players...');
 				
@@ -173,11 +202,18 @@ client = {
 			}
 		},
 		
-		joinGame: function(joined) {
+		joinGame: function(gameId, players) {
 			
-			if(joined) {
+			if(gameId) {
 				
 				dojo.byId("container").style.display = "none";
+				
+				client.gameId = gameId;
+				client.players = {};
+				
+				for(var i = 0, len = players.length; i < len; ++i) {
+					client.players[players[i].id] = players[i];
+				}
 				
 				alert('Game joined! Waiting for players...');
 				
@@ -229,7 +265,7 @@ dojo.addOnLoad(function() {
 	
 	socket.onopen = function(message) {
 		console.log("open");
-	}
+	};
 	
 	socket.onmessage = function(message) {
 		//console.log("connected " + message);
@@ -251,7 +287,7 @@ dojo.addOnLoad(function() {
 					
 					console.log('Got ' + methodCall.action + ' response');
 					
-					client.response[methodCall.action].apply(this, [methodCall.response, methodCall.args ? methodCall.args : []]);
+					client.response[methodCall.action].apply(this, methodCall.response.push(methodCall.args));
 				}
 				
 			} else {
@@ -268,19 +304,19 @@ dojo.addOnLoad(function() {
 			
 			console.error(e);
 		}
-	}
+	};
 	
 	socket.onerror = function(message) {
 		console.log("error!");
 		
 		console.error(message);
-	}
+	};
 	
 	socket.invoke = function(method, args) {
 		socket.send(JSON.stringify({
 			action: method,
 			args: args ? args : []
 		}) + "\r\n");
-	}
+	};
 });
 
