@@ -3,6 +3,8 @@ body {
 	background-color: black;
 	margin:0;
 	padding:0;
+	background: url(../img/f1.gif) bottom center black;
+	background-size: 100%;
 }
 h1, h2 {
 	margin: .5em 0;
@@ -11,28 +13,23 @@ h1:first-child, h2:first-child {
 	margin-top: 0;
 }
 h1 { 
-/* 	font-family: 'UnifrakturMaguntia', serif;  */
-	font-family: 'Vollkorn', serif;
-	font-size: 5em;
-	margin: 0;
-	position:fixed;
-	bottom:0;
-	color:black;
-	text-shadow: 0 0 3px #000;
-}
-#flames {
-	position:fixed;
-	top:0;
-	left:0;
-	z-index:1;
+	background: url(../img/logo.png) no-repeat left top;
+	width: 488px;
+	height: 0;
+	padding: 185px 0 0 0;
+	overflow: hidden;
 }
 #container {
-	position:relative;
-	z-index:1;
-	float:left;
+	position: fixed;
+	width: 488px;
+	padding: 20px;
+	left: 50%;
+	margin: 0 0 0 -244px;
+	top: 50px;
 	background-color: rgba(51, 51, 51, 0.8);
 	padding: 1em;
 	color:#fff;
+	border-radius: 10px;
 }
 #container h2 {
 	font-family: 'Vollkorn', serif;
