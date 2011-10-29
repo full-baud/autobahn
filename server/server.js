@@ -1,5 +1,5 @@
 var sys = require('sys'),
-     ws = require('ws');
+     ws = require('modules/node-websocket-server/ws/server.js');
 
 // Array Remove - By John Resig (MIT Licensed)
 // http://ejohn.org/blog/javascript-array-remove/
@@ -373,6 +373,7 @@ var autoBahn = {
 	}
 };
 
+// TODO: update to use new ws connection module as per http://static.brandedcode.com/nws-docs/
 var server = ws.createServer(function(socket) {
 	
 	socket.addListener("connect", function(resource) {
