@@ -11,26 +11,32 @@
 	<body>
 		<div id="container">
 			<h1>AutoBahn</h1>
-			<form id="playerDetails">
-				<h2>Create player</h2>
-				<input placeholder="Your name" id="playerName"/>
-				<input placeholder="Avatar URL" id="playerAvatar"/>
-				<input type="button" id="createNewPlayerButton" value="Create" />
+			<form id="playerDetailsForm">
+				<h2>Turbo charged with swedes</h2>
+				<img id="playerAvatar" src="" width="80" height="80" />
+				<p id="playerName"></p>
+				<input type="button" id="editPlayerDetailsButton" value="Edit" />
+			</form>
+			<form id="editPlayerDetailsForm">
+				<h2>Create/Edit player</h2>
+				<input placeholder="Your name" id="playerNameField"/>
+				<input placeholder="Avatar URL" id="playerAvatarField"/>
+				<input type="button" id="createNewPlayerButton" value="Save" />
+			</form>
+			<form id="createNewGame">
+				<h2>Create new game</h2>
+				<input placeholder="Title" id="createNewGameTitle" />
+				<select id="createNewGamePlayers">
+					<option value="1">Number of players...</option>
+					<option>1</option>
+					<option>2</option>
+					<option>4</option>
+					<option>8</option>
+					<option>16</option>
+				</select>
+				<input type="submit" id="createNewGameButton" value="Create" disabled="disabled" />
 			</form>
 			<div id="loungeList">
-				<form>
-					<h2>Create new game</h2>
-					<input placeholder="Title" id="createNewGameTitle" />
-					<select id="createNewGamePlayers">
-						<option value="1">Number of players...</option>
-						<option>1</option>
-						<option>2</option>
-						<option>4</option>
-						<option>8</option>
-						<option>16</option>
-					</select>
-					<input type="submit" id="createNewGameButton" value="Create" />
-				</form>
 				<h2>Join game</h2>
 				<table width="100%" cellpadding="0" cellspacing="0">
 					<thead>

@@ -5,6 +5,7 @@ body {
 	padding:0;
 	background: url(../img/0.gif) bottom center black;
 	background-size: 100%;
+	font-family: "VT323", Courier, monospace;
 }
 body.bg_0 {
 	background-image: url(../img/0.gif);
@@ -59,7 +60,6 @@ h1 {
 	-webkit-transform: rotate(2deg);
 }
 #container h2 {
-	font-family: "VT323", Courier, monospace;
 	font-size: 2em;
 	color: #FFF;
 }
@@ -79,9 +79,26 @@ h1 {
 	background-color: rgba(51, 51, 51, 0.5);
 	text-align:left;
 }
+#loungeList {
+	padding: 20px;
+	-webkit-transform: rotate(-2deg);
+}
 form {
 	background-color: rgba(51, 51, 51, 0.8);
 	border-radius: 10px;
 	padding: 10px;
 	-webkit-transform: rotate(-2deg);
+}
+#playerDetailsForm img {
+	float: left;
+	margin-right: 10px;
+}
+#playerDetailsForm p {
+	margin-top: 30px;
+}
+#playerDetailsForm {
+	min-height: 130px;
+}
+#createNewGame {
+	margin-top: 20px;
 }

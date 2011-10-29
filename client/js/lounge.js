@@ -22,21 +22,21 @@ client = {
 		// we've connected to the server, display the list of available games
 		socket.invoke("getLoungeList", [id]);
 		
+		dojo.byId("createNewGameButton").disabled = false;
+		
 		// set up the new game button
-		document.getElementById("createNewGameButton").onclick = function() {
+		dojo.connect(dojo.byId("createNewGameButton"), "onclick", function() {
 			var gameName = document.getElementById("createNewGameTitle").value;
 			var maxPlayers = parseInt(document.getElementById("createNewGamePlayers").value);
 			
 			if(!gameName) {
 				document.getElementById("createNewGameTitle").style.borderColor = "red";
 				
-				return false;
+				return;
 			}
 			
 			socket.invoke("createGame", [id, gameName, maxPlayers]);
-			
-			return false;
-		};
+		});
 	},
 	
 	startGame: function(gameId, players) {
@@ -225,38 +225,90 @@ client = {
 	}
 };
 
+var setUpForms = function () {
+	var playerNameField = dojo.byId('playerNameField'),
+		playerAvatarField = dojo.byId('playerAvatarField'),
+		playerDetailsForm = dojo.byId('playerDetailsForm'),
+		editPlayerDetailsForm = dojo.byId('editPlayerDetailsForm'),
+		avatar = dojo.byId('playerAvatar'),
+		loungeList = dojo.byId('loungeList'),
+		createNewGame = dojo.byId('createNewGame');
+	
+	// has the player been set up?
+	if(localStorage.getItem('playerName')) {
+		// show details
+		playerDetailsForm.style.display = 'block';
+		
+		// hide edit display
+		editPlayerDetailsForm.style.display = 'none';
+		
+		// store player name in field
+		playerNameField.value = localStorage.getItem('playerName');
+		
+		playerName.appendChild(document.createTextNode("Hello " + localStorage.getItem('playerName')));
+		
+		loungeList.style.display = 'block';
+		createNewGame.style.display = 'block';
+	} else {
+		// player has not been set up, show the edit details form
+		playerDetailsForm.style.display = 'none';
+		editPlayerDetailsForm.style.display = 'block';
+		loungeList.style.display = 'none';
+		createNewGame.style.display = 'none';
+	}
+	
+	// has the user set an avatar?
+	if(localStorage.getItem('playerAvatar')) {
+		// show avatar
+		avatar.src = localStorage.getItem('playerAvatar');
+		playerAvatarField.value = localStorage.getItem('playerAvatar');
+	} else {
+		avatar.style.display = 'none';
+	}
+}
+
 dojo.addOnLoad(function() {
 	console.log("loaded");
 	
-	var playerName = dojo.byId('playerName'),
-		playerAvatar = dojo.byId('playerAvatar');
+	setUpForms();
 	
-	playerName.value = dojo.cookie("playerName") ? dojo.cookie("playerName") : '';
-	playerAvatar.value = dojo.cookie("playerAvatar") ? dojo.cookie("playerAvatar") : '';
+	dojo.connect(dojo.byId('editPlayerDetailsButton'), 'onclick', function() {
+		// show edit player details form
+		var playerDetailsForm = dojo.byId('playerDetailsForm'),
+		editPlayerDetailsForm = dojo.byId('editPlayerDetailsForm'),
+		loungeList = dojo.byId('loungeList'),
+		createNewGame = dojo.byId('createNewGame');
+		
+		playerDetailsForm.style.display = 'none';
+		editPlayerDetailsForm.style.display = 'block';
+		loungeList.style.display = 'none';
+		createNewGame.style.display = 'none';
+	});
 	
 	dojo.connect(dojo.byId('createNewPlayerButton'), 'onclick', function() {
+		var playerNameField = dojo.byId('playerNameField'),
+		playerAvatarField = dojo.byId('playerAvatarField');
 		
-		var name = playerName.value,
-			avatar = playerAvatar.value;
-		
-		dojo.byId('playerDetails').style.display = 'none';
-		dojo.byId('loungeList').style.display = 'block';
+		var name = playerNameField.value,
+			avatar = playerAvatarField.value;
 		
 		if(name) {
-			
-			dojo.cookie("playerName", name, {
-				expires: 365
-			});
-			
-			socket.invoke('setPlayerName', [client.id, name]);
+			localStorage.setItem('playerName', name);
+		} else {
+			return
 		}
 		
 		if(avatar) {
-			
-			dojo.cookie("playerAvatar", name, {
-				expires: 365
-			});
-			
+			localStorage.setItem('playerAvatar', avatar);
+		}
+		
+		playerDetailsForm.style.display = 'block';
+		editPlayerDetailsForm.style.display = 'none';
+		loungeList.style.display = 'block';
+		createNewGame.style.display = 'block';
+		
+		if(socket) {
+			socket.invoke('setPlayerName', [client.id, name]);
 			socket.invoke('setPlayerAvatar', [client.id, avatar]);
 		}
 	});
