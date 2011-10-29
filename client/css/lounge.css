@@ -30,7 +30,7 @@ body.bg_6 {
 h1, h2 {
 	margin: .5em 0;
 }
-h1:first-child, h2:first-child {
+h1:first-child, h2:first-child, form:first-child {
 	margin-top: 0;
 }
 h1 { 
@@ -39,21 +39,28 @@ h1 {
 	height: 0;
 	padding: 185px 0 0 0;
 	overflow: hidden;
+	-webkit-transform: rotate(-2deg);
 }
 #container {
 	position: fixed;
 	width: 488px;
 	padding: 20px;
 	left: 50%;
-	margin: 0 0 0 -244px;
+	margin: 0 0 0 -264px;
 	top: 50px;
 	background-color: rgba(51, 51, 51, 0.8);
 	padding: 1em;
 	color:#fff;
+	border: 5px solid rgba(61, 61, 61, 0.8);
 	border-radius: 10px;
+	-moz-box-shadow: 5px 5px 5px #111;
+	-webkit-box-shadow: 5px 5px 5px #111;
+	box-shadow: 5px 5px 5px #111;
+	-webkit-transform: rotate(2deg);
 }
 #container h2 {
-	font-family: 'Courier New', Courier, monospace;
+	font-family: "VT323", Courier, monospace;
+	font-size: 2em;
 	color: #FFF;
 }
 #loungeList {
@@ -71,4 +78,10 @@ h1 {
 #loungeList th {
 	background-color: rgba(51, 51, 51, 0.5);
 	text-align:left;
+}
+form {
+	background-color: rgba(51, 51, 51, 0.8);
+	border-radius: 10px;
+	padding: 10px;
+	-webkit-transform: rotate(-2deg);
 }
