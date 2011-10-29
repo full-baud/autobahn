@@ -3,8 +3,29 @@ body {
 	background-color: black;
 	margin:0;
 	padding:0;
-	background: url(../img/f1.gif) bottom center black;
+	background: url(../img/0.gif) bottom center black;
 	background-size: 100%;
+}
+body.bg_0 {
+	background-image: url(../img/0.gif);
+}
+body.bg_1 {
+	background-image: url(../img/1.gif);
+}
+body.bg_2 {
+	background-image: url(../img/2.gif);
+}
+body.bg_3 {
+	background-image: url(../img/3.gif);
+}
+body.bg_4 {
+	background-image: url(../img/4.gif);
+}
+body.bg_5 {
+	background-image: url(../img/5.gif);
+}
+body.bg_6 {
+	background-image: url(../img/6.gif);
 }
 h1, h2 {
 	margin: .5em 0;
@@ -32,7 +53,7 @@ h1 {
 	border-radius: 10px;
 }
 #container h2 {
-	font-family: 'Vollkorn', serif;
+	font-family: 'Courier New', Courier, monospace;
 	color: #FFF;
 }
 #loungeList {
