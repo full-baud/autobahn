@@ -43,7 +43,7 @@ h1 {
 	-webkit-transform: rotate(-2deg);
 }
 #container {
-	position: fixed;
+	position: absolute;
 	width: 488px;
 	padding: 20px;
 	left: 50%;
