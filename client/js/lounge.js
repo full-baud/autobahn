@@ -339,7 +339,7 @@ dojo.addOnLoad(function() {
 					
 					console.log('Got ' + methodCall.action + ' response');
 					
-					client.response[methodCall.action].apply(this, methodCall.response.push(methodCall.args));
+					client.response[methodCall.action].apply(this, [methodCall.response, methodCall.args]);
 				}
 				
 			} else {
